@@ -50,7 +50,7 @@ Automatically sync your Beehiiv newsletter subscribers and post analytics into N
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/beehiiv-notion-sync.git
+git clone https://github.com/whybothercoding/beehiiv-notion-sync.git
 cd beehiiv-notion-sync
 npm install
 npm run build
