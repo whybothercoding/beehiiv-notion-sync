@@ -1,0 +1,36 @@
+{
+  "name": "beehiiv-notion-sync",
+  "version": "0.1.0",
+  "description": "Sync Beehiiv subscribers and post analytics to Notion databases automatically",
+  "main": "dist/index.js",
+  "bin": {
+    "beehiiv-notion-sync": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["beehiiv", "notion", "newsletter", "sync", "automation", "cli"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "axios": "^1.7.2",
+    "chalk": "^4.1.2",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/node-cron": "^3.0.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
