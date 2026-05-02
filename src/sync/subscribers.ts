@@ -13,7 +13,7 @@ import {
 } from '../notion/types';
 import { RateLimiter, withRetry } from './utils';
 
-function mapSubscriberToNotion(sub: BeehiivSubscriber): SubscriberProperties {
+export function mapSubscriberToNotion(sub: BeehiivSubscriber): SubscriberProperties {
   return {
     Email: titleProp(sub.email),
     Status: selectProp(sub.status),

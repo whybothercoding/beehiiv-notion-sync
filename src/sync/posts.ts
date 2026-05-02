@@ -14,7 +14,7 @@ import {
 } from '../notion/types';
 import { RateLimiter, withRetry } from './utils';
 
-function mapPostToNotion(post: BeehiivPost): PostProperties {
+export function mapPostToNotion(post: BeehiivPost): PostProperties {
   return {
     Title: titleProp(post.title),
     Subtitle: richTextProp(post.subtitle ?? ''),
