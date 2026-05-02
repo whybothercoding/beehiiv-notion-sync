@@ -2,16 +2,8 @@ import ora from 'ora';
 import { loadConfig } from '../config';
 import { getAllPosts } from '../beehiiv/client';
 import { BeehiivPost } from '../beehiiv/types';
-import { upsertByExternalId, createNotionClient } from '../notion/client';
-import {
-  titleProp,
-  richTextProp,
-  selectProp,
-  dateProp,
-  urlProp,
-  numberProp,
-  PostProperties,
-} from '../notion/types';
+import { createNotionClient, createPage, updatePage, fetchExistingIds } from '../notion/client';
+import { titleProp, richTextProp, selectProp, dateProp, urlProp, numberProp, PostProperties } from '../notion/types';
 import { RateLimiter, withRetry } from './utils';
 
 export function mapPostToNotion(post: BeehiivPost): PostProperties {
@@ -31,51 +23,46 @@ export function mapPostToNotion(post: BeehiivPost): PostProperties {
   };
 }
 
-export async function syncPosts(): Promise<{
-  created: number;
-  updated: number;
-  failed: number;
-}> {
+export async function syncPosts(options: { dryRun?: boolean } = {}): Promise<{ created: number; updated: number; failed: number }> {
   const config = loadConfig();
   const notion = createNotionClient(config.notionApiKey);
   const limiter = new RateLimiter(3, 350);
 
   const spinner = ora('Fetching posts from Beehiiv...').start();
-  const posts = await getAllPosts(
-    config.beehiivApiKey,
-    config.beehiivPublicationId
-  );
+  const posts = await getAllPosts(config.beehiivApiKey, config.beehiivPublicationId);
+
+  if (options.dryRun) {
+    spinner.succeed(`[dry-run] Would sync ${posts.length} posts (no writes performed)`);
+    return { created: 0, updated: 0, failed: 0 };
+  }
+
+  spinner.text = 'Loading existing Notion post records...';
+  const existingIds = await fetchExistingIds(notion, config.notionPostsDbId, 'BeehiivPostId');
   spinner.text = `Syncing ${posts.length} posts to Notion...`;
 
-  let created = 0;
-  let updated = 0;
-  let failed = 0;
+  let created = 0, updated = 0, failed = 0;
 
   const tasks = posts.map((post, i) =>
     limiter.execute(() =>
       withRetry(async () => {
         const properties = mapPostToNotion(post);
-        const result = await upsertByExternalId(
-          notion,
-          config.notionPostsDbId,
-          'BeehiivPostId',
-          post.id,
-          properties
-        );
-        if (result === 'created') created++;
-        else updated++;
+        const existingPageId = existingIds.get(post.id);
+        if (existingPageId) {
+          await updatePage(notion, existingPageId, properties);
+          updated++;
+        } else {
+          await createPage(notion, config.notionPostsDbId, properties);
+          created++;
+        }
         spinner.text = `Syncing posts: ${i + 1}/${posts.length} (${created} created, ${updated} updated)`;
-      }, 3, 1000).catch(() => {
+      }, 3, 1000).catch((err: Error) => {
         failed++;
+        spinner.warn(`Failed to sync post "${post.title}": ${err.message}`);
       })
     )
   );
 
   await Promise.all(tasks);
-
-  spinner.succeed(
-    `Posts sync complete: ${created} created, ${updated} updated, ${failed} failed`
-  );
-
+  spinner.succeed(`Posts sync complete: ${created} created, ${updated} updated, ${failed} failed`);
   return { created, updated, failed };
 }
