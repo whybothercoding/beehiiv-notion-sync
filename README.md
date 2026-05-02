@@ -110,6 +110,7 @@ Syncs data from Beehiiv to Notion. Runs both subscribers and posts by default.
 beehiiv-notion-sync sync                # sync both (default)
 beehiiv-notion-sync sync --subscribers  # subscribers only
 beehiiv-notion-sync sync --posts        # posts only
+beehiiv-notion-sync sync --dry-run      # fetch data but skip all Notion writes
 ```
 
 ### `start`
@@ -173,6 +174,18 @@ The `start` command uses `node-cron` to repeat the sync every N hours. See [docs
 | ClickRate | Number | Percent format |
 | Unsubscribes | Number | |
 | BeehiivPostId | Text | Used for deduplication |
+
+---
+
+## Development
+
+```bash
+npm install
+npm run build       # compile TypeScript
+npm run dev         # run without building (ts-node)
+npm test            # run unit tests
+npm run test:watch  # run tests in watch mode
+```
 
 ---
 
