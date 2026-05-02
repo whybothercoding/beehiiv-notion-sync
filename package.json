@@ -10,13 +10,22 @@
     "build": "tsc",
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "engines": {
     "node": ">=18"
   },
-  "keywords": ["beehiiv", "notion", "newsletter", "sync", "automation", "cli"],
-  "author": "",
+  "keywords": [
+    "beehiiv",
+    "notion",
+    "newsletter",
+    "sync",
+    "automation",
+    "cli"
+  ],
+  "author": "Theo Lasha <contact@indiegoweb.com>",
   "license": "MIT",
   "dependencies": {
     "@notionhq/client": "^2.2.15",
@@ -28,8 +37,11 @@
     "ora": "^5.4.1"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.14.0",
     "@types/node-cron": "^3.0.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }

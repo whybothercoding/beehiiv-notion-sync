@@ -36,12 +36,13 @@ export function loadSetupConfig(): SetupConfig {
 }
 
 export function loadConfig(): Config {
+  const rawInterval = parseInt(process.env['SYNC_INTERVAL_HOURS'] ?? '6', 10);
   return {
     beehiivApiKey: requireEnv('BEEHIIV_API_KEY'),
     beehiivPublicationId: requireEnv('BEEHIIV_PUBLICATION_ID'),
     notionApiKey: requireEnv('NOTION_API_KEY'),
     notionSubscribersDbId: requireEnv('NOTION_SUBSCRIBERS_DB_ID'),
     notionPostsDbId: requireEnv('NOTION_POSTS_DB_ID'),
-    syncIntervalHours: parseInt(process.env['SYNC_INTERVAL_HOURS'] ?? '6', 10),
+    syncIntervalHours: Number.isFinite(rawInterval) && rawInterval > 0 ? rawInterval : 6,
   };
 }

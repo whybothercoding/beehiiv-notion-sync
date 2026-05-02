@@ -26,7 +26,16 @@ export interface NotionNumberProperty {
   number: number | null;
 }
 
-export interface SubscriberProperties {
+export type NotionPropertyValue =
+  | NotionTitleProperty
+  | NotionRichTextProperty
+  | NotionSelectProperty
+  | NotionMultiSelectProperty
+  | NotionDateProperty
+  | NotionUrlProperty
+  | NotionNumberProperty;
+
+export interface SubscriberProperties extends Record<string, NotionPropertyValue> {
   Email: NotionTitleProperty;
   Status: NotionSelectProperty;
   SubscribedAt: NotionDateProperty;
@@ -38,7 +47,7 @@ export interface SubscriberProperties {
   BeehiivId: NotionRichTextProperty;
 }
 
-export interface PostProperties {
+export interface PostProperties extends Record<string, NotionPropertyValue> {
   Title: NotionTitleProperty;
   Subtitle: NotionRichTextProperty;
   Status: NotionSelectProperty;
@@ -58,7 +67,7 @@ export function titleProp(content: string): NotionTitleProperty {
 }
 
 export function richTextProp(content: string): NotionRichTextProperty {
-  return { rich_text: [{ text: { content: content ?? '' } }] };
+  return { rich_text: [{ text: { content } }] };
 }
 
 export function selectProp(name: string | null | undefined): NotionSelectProperty {
@@ -72,7 +81,7 @@ export function multiSelectProp(names: string[]): NotionMultiSelectProperty {
 export function dateProp(unixTimestamp: number | null | undefined): NotionDateProperty {
   if (!unixTimestamp) return { date: null };
   const iso = new Date(unixTimestamp * 1000).toISOString().split('T')[0];
-  return { date: { start: iso as string } };
+  return { date: { start: iso } };
 }
 
 export function urlProp(url: string | null | undefined): NotionUrlProperty {

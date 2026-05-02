@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { version } from '../package.json';
 import { runSetup } from './notion/setup';
 import { syncSubscribers } from './sync/subscribers';
 import { syncPosts } from './sync/posts';
@@ -12,7 +13,7 @@ const program = new Command();
 program
   .name('beehiiv-notion-sync')
   .description('Sync Beehiiv subscribers and post analytics to Notion')
-  .version('0.1.0');
+  .version(version);
 
 program
   .command('setup')
@@ -34,23 +35,18 @@ program
   .option('--subscribers', 'Sync only subscribers')
   .option('--posts', 'Sync only posts')
   .option('--all', 'Sync both subscribers and posts (default)')
-  .action(async (options: { subscribers?: boolean; posts?: boolean; all?: boolean }) => {
+  .option('--dry-run', 'Fetch data from Beehiiv but skip all writes to Notion')
+  .action(async (options: { subscribers?: boolean; posts?: boolean; all?: boolean; dryRun?: boolean }) => {
     try {
       loadConfig();
     } catch (error) {
       console.error(chalk.red((error as Error).message));
       process.exit(1);
     }
-
     const syncAll = !options.subscribers && !options.posts;
-
     try {
-      if (options.subscribers || syncAll) {
-        await syncSubscribers();
-      }
-      if (options.posts || syncAll) {
-        await syncPosts();
-      }
+      if (options.subscribers || syncAll) await syncSubscribers({ dryRun: options.dryRun });
+      if (options.posts || syncAll) await syncPosts({ dryRun: options.dryRun });
     } catch (error) {
       console.error(chalk.red((error as Error).message));
       process.exit(1);
@@ -67,7 +63,6 @@ program
       console.error(chalk.red((error as Error).message));
       process.exit(1);
     }
-
     await startScheduler();
   });
 
