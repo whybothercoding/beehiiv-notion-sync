@@ -75,4 +75,9 @@ describe('loadConfig', () => {
     delete process.env.NOTION_SUBSCRIBERS_DB_ID;
     expect(() => loadConfig()).toThrow('Missing NOTION_SUBSCRIBERS_DB_ID');
   });
+  it('defaults syncIntervalHours to 6 when SYNC_INTERVAL_HOURS is not a valid number', () => {
+    Object.assign(process.env, BASE_ENV);
+    process.env.SYNC_INTERVAL_HOURS = 'foo';
+    expect(loadConfig().syncIntervalHours).toBe(6);
+  });
 });
