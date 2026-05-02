@@ -26,7 +26,16 @@ export interface NotionNumberProperty {
   number: number | null;
 }
 
-export interface SubscriberProperties {
+export type NotionPropertyValue =
+  | NotionTitleProperty
+  | NotionRichTextProperty
+  | NotionSelectProperty
+  | NotionMultiSelectProperty
+  | NotionDateProperty
+  | NotionUrlProperty
+  | NotionNumberProperty;
+
+export interface SubscriberProperties extends Record<string, NotionPropertyValue> {
   Email: NotionTitleProperty;
   Status: NotionSelectProperty;
   SubscribedAt: NotionDateProperty;
@@ -38,7 +47,7 @@ export interface SubscriberProperties {
   BeehiivId: NotionRichTextProperty;
 }
 
-export interface PostProperties {
+export interface PostProperties extends Record<string, NotionPropertyValue> {
   Title: NotionTitleProperty;
   Subtitle: NotionRichTextProperty;
   Status: NotionSelectProperty;

@@ -60,7 +60,7 @@ export async function syncPosts(): Promise<{
           config.notionPostsDbId,
           'BeehiivPostId',
           post.id,
-          properties as unknown as Record<string, unknown>
+          properties
         );
         if (result === 'created') created++;
         else updated++;

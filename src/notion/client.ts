@@ -3,6 +3,7 @@ import type {
   PageObjectResponse,
   QueryDatabaseParameters,
 } from '@notionhq/client/build/src/api-endpoints';
+import type { NotionPropertyValue } from './types';
 
 export function createNotionClient(apiKey: string): Client {
   return new Client({ auth: apiKey });
@@ -54,7 +55,7 @@ export async function findPageByProperty(
 export async function createPage(
   notion: Client,
   databaseId: string,
-  properties: Record<string, unknown>
+  properties: Record<string, NotionPropertyValue>
 ): Promise<string> {
   const response = await notion.pages.create({
     parent: { database_id: databaseId },
@@ -66,7 +67,7 @@ export async function createPage(
 export async function updatePage(
   notion: Client,
   pageId: string,
-  properties: Record<string, unknown>
+  properties: Record<string, NotionPropertyValue>
 ): Promise<void> {
   await notion.pages.update({
     page_id: pageId,
@@ -79,7 +80,7 @@ export async function upsertByExternalId(
   databaseId: string,
   idProperty: string,
   idValue: string,
-  properties: Record<string, unknown>
+  properties: Record<string, NotionPropertyValue>
 ): Promise<'created' | 'updated'> {
   const existing = await findPageByProperty(
     notion,

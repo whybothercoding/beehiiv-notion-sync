@@ -56,7 +56,7 @@ export async function syncSubscribers(): Promise<{
           config.notionSubscribersDbId,
           'BeehiivId',
           sub.id,
-          properties as unknown as Record<string, unknown>
+          properties
         );
         if (result === 'created') created++;
         else updated++;
