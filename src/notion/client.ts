@@ -97,3 +97,20 @@ export async function upsertByExternalId(
   await createPage(notion, databaseId, properties);
   return 'created';
 }
+
+export async function fetchExistingIds(
+  notion: Client,
+  databaseId: string,
+  idProperty: string
+): Promise<Map<string, string>> {
+  const pages = await queryDatabase(notion, databaseId);
+  const map = new Map<string, string>();
+  for (const page of pages) {
+    const prop = page.properties[idProperty];
+    if (prop && 'rich_text' in prop && prop.rich_text.length > 0) {
+      const value = prop.rich_text[0].plain_text;
+      if (value) map.set(value, page.id);
+    }
+  }
+  return map;
+}
