@@ -43,7 +43,7 @@ CLI tool built with Commander. Three commands: `setup`, `sync`, `start`.
 **Module layout:**
 - `src/config.ts` — env loading; `loadSetupConfig()` requires 3 vars, `loadConfig()` requires all 5. `SYNC_INTERVAL_HOURS` is guarded against `NaN`/non-positive values, falling back to 6
 - `src/beehiiv/client.ts` — cursor-paginated fetchers (`getAllSubscribers`, `getAllPosts`); posts fetch with `expand[]=stats`
-- `src/beehiiv/types.ts` — raw Beehiiv API shapes
+- `src/beehiiv/types.ts` — raw Beehiiv API shapes. `BeehiivPost.stats` is `BeehiivPostStats | null` — drafts and pre-send posts have no stats; access with `?.` accordingly
 - `src/notion/types.ts` — Notion property builder functions (`titleProp`, `richTextProp`, `selectProp`, etc.), typed `SubscriberProperties` / `PostProperties` interfaces, and the `NotionPropertyValue` union type. Both property interfaces extend `Record<string, NotionPropertyValue>` so they pass to `createPage`/`updatePage` without casts
 - `src/notion/client.ts` — thin wrappers over `@notionhq/client`. `fetchExistingIds` does a single paginated query of the database and returns `Map<externalId, notionPageId>` — call this once per sync run instead of querying per record. `upsertByExternalId` is retained for external use but is no longer used internally
 - `src/notion/setup.ts` — creates the two databases with the exact property schema expected by the sync mappers
@@ -55,7 +55,7 @@ CLI tool built with Commander. Three commands: `setup`, `sync`, `start`.
 - `tests/notion/types.test.ts` — all 7 property builder functions, including edge cases (null, undefined, zero)
 - `tests/notion/client.test.ts` — `fetchExistingIds` with a mocked Notion client
 - `tests/sync/utils.test.ts` — `withRetry` (retry count, last-error rethrow) and `RateLimiter` (concurrency ceiling, full queue drain)
-- `tests/sync/mappers.test.ts` — `mapSubscriberToNotion` and `mapPostToNotion`, including null fields and zero stats
+- `tests/sync/mappers.test.ts` — `mapSubscriberToNotion` and `mapPostToNotion`, including null fields, zero stats, and null stats (draft posts)
 - `tests/config.test.ts` — `loadSetupConfig` and `loadConfig` with mocked `process.env`, including whitespace-only and non-numeric env var cases
 
 **Notion upsert key convention:** Subscribers are keyed on `BeehiivId` (rich_text); posts on `BeehiivPostId` (rich_text). The property name must exactly match what `setup` created and what `fetchExistingIds` queries by.
