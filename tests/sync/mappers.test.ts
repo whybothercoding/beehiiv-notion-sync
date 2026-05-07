@@ -64,4 +64,13 @@ describe('mapPostToNotion', () => {
     expect(r.TotalSent).toEqual({ number: 0 });
     expect(r.OpenRate).toEqual({ number: 0 });
   });
+  it('handles null stats (draft/unpublished post)', () => {
+    const r = mapPostToNotion({ ...basePost, stats: null });
+    expect(r.TotalSent).toEqual({ number: null });
+    expect(r.Opens).toEqual({ number: null });
+    expect(r.OpenRate).toEqual({ number: null });
+    expect(r.Clicks).toEqual({ number: null });
+    expect(r.ClickRate).toEqual({ number: null });
+    expect(r.Unsubscribes).toEqual({ number: null });
+  });
 });

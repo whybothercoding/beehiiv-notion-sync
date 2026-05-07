@@ -27,7 +27,7 @@ export interface BeehiivPost {
   status: string;
   publish_date: number | null; // Unix timestamp
   web_url: string | null;
-  stats: BeehiivPostStats;
+  stats: BeehiivPostStats | null;
 }
 
 export interface BeehiivPaginatedResponse<T> {
