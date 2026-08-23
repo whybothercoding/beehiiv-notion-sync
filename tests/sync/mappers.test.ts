@@ -3,10 +3,15 @@ import { mapPostToNotion } from '../../src/sync/posts';
 import type { BeehiivSubscriber, BeehiivPost } from '../../src/beehiiv/types';
 
 const baseSubscriber: BeehiivSubscriber = {
-  id: 'sub_abc123', email: 'test@example.com', status: 'active',
-  created_at: 1705276800, subscription_tier: 'free',
-  utm_source: 'twitter', utm_medium: 'social', utm_campaign: 'launch',
-  tags: ['vip', 'beta'], custom_fields: {},
+  id: 'sub_abc123',
+  email: 'test@example.com',
+  status: 'active',
+  created: 1705276800,
+  subscription_tier: 'free',
+  utm_source: 'twitter',
+  utm_medium: 'social',
+  utm_campaign: 'launch',
+  tags: ['vip', 'beta'],
 };
 
 describe('mapSubscriberToNotion', () => {
@@ -31,17 +36,35 @@ describe('mapSubscriberToNotion', () => {
     const r = mapSubscriberToNotion({ ...baseSubscriber, tags: [] });
     expect(r.Tags).toEqual({ multi_select: [] });
   });
+  it('handles missing tags (not requested via expand)', () => {
+    const { tags: _tags, ...withoutTags } = baseSubscriber;
+    const r = mapSubscriberToNotion(withoutTags);
+    expect(r.Tags).toEqual({ multi_select: [] });
+  });
 });
 
 const basePost: BeehiivPost = {
-  id: 'post_xyz456', title: 'My First Issue', subtitle: 'A great one',
-  status: 'confirmed', publish_date: 1705276800,
+  id: 'post_xyz456',
+  title: 'My First Issue',
+  subtitle: 'A great one',
+  status: 'confirmed',
+  publish_date: 1705276800,
   web_url: 'https://example.beehiiv.com/p/my-first-issue',
-  stats: { total_sent: 1200, opens: 480, open_rate: 0.4, clicks: 96, click_rate: 0.08, unsubscribes: 3 },
+  stats: {
+    email: {
+      recipients: 1200,
+      opens: 480,
+      open_rate: 0.4,
+      clicks: 96,
+      click_rate: 0.08,
+      unsubscribes: 3,
+    },
+    web: { views: 340, clicks: 22 },
+  },
 };
 
 describe('mapPostToNotion', () => {
-  it('maps all fields correctly', () => {
+  it('maps all fields correctly, including nested email and web stats', () => {
     const r = mapPostToNotion(basePost);
     expect(r.Title).toEqual({ title: [{ text: { content: 'My First Issue' } }] });
     expect(r.Status).toEqual({ select: { name: 'confirmed' } });
@@ -49,6 +72,8 @@ describe('mapPostToNotion', () => {
     expect(r.WebUrl).toEqual({ url: 'https://example.beehiiv.com/p/my-first-issue' });
     expect(r.TotalSent).toEqual({ number: 1200 });
     expect(r.OpenRate).toEqual({ number: 0.4 });
+    expect(r.WebViews).toEqual({ number: 340 });
+    expect(r.WebClicks).toEqual({ number: 22 });
     expect(r.BeehiivPostId).toEqual({ rich_text: [{ text: { content: 'post_xyz456' } }] });
   });
   it('handles null subtitle and publish_date', () => {
@@ -60,11 +85,18 @@ describe('mapPostToNotion', () => {
     expect(mapPostToNotion({ ...basePost, web_url: null }).WebUrl).toEqual({ url: null });
   });
   it('handles zero stats', () => {
-    const r = mapPostToNotion({ ...basePost, stats: { total_sent: 0, opens: 0, open_rate: 0, clicks: 0, click_rate: 0, unsubscribes: 0 } });
+    const r = mapPostToNotion({
+      ...basePost,
+      stats: {
+        email: { recipients: 0, opens: 0, open_rate: 0, clicks: 0, click_rate: 0, unsubscribes: 0 },
+        web: { views: 0, clicks: 0 },
+      },
+    });
     expect(r.TotalSent).toEqual({ number: 0 });
     expect(r.OpenRate).toEqual({ number: 0 });
+    expect(r.WebViews).toEqual({ number: 0 });
   });
-  it('handles null stats (draft/unpublished post)', () => {
+  it('handles null stats (draft/unpublished post, or expand[]=stats not requested)', () => {
     const r = mapPostToNotion({ ...basePost, stats: null });
     expect(r.TotalSent).toEqual({ number: null });
     expect(r.Opens).toEqual({ number: null });
@@ -72,5 +104,13 @@ describe('mapPostToNotion', () => {
     expect(r.Clicks).toEqual({ number: null });
     expect(r.ClickRate).toEqual({ number: null });
     expect(r.Unsubscribes).toEqual({ number: null });
+    expect(r.WebViews).toEqual({ number: null });
+    expect(r.WebClicks).toEqual({ number: null });
+  });
+  it('handles a post published web-only (email stats absent, web stats present)', () => {
+    const r = mapPostToNotion({ ...basePost, stats: { web: { views: 50, clicks: 4 } } });
+    expect(r.TotalSent).toEqual({ number: null });
+    expect(r.WebViews).toEqual({ number: 50 });
+    expect(r.WebClicks).toEqual({ number: 4 });
   });
 });

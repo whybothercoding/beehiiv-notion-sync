@@ -8,9 +8,7 @@ describe('withRetry', () => {
   });
 
   it('retries on failure and succeeds on a later attempt', async () => {
-    const fn = jest.fn()
-      .mockRejectedValueOnce(new Error('fail'))
-      .mockResolvedValue('ok');
+    const fn = jest.fn().mockRejectedValueOnce(new Error('fail')).mockResolvedValue('ok');
     expect(await withRetry(fn, 3, 0)).toBe('ok');
     expect(fn).toHaveBeenCalledTimes(2);
   });
@@ -38,9 +36,7 @@ describe('RateLimiter', () => {
 
   it('propagates errors from the task', async () => {
     const limiter = new RateLimiter(3, 0);
-    await expect(
-      limiter.execute(() => Promise.reject(new Error('boom')))
-    ).rejects.toThrow('boom');
+    await expect(limiter.execute(() => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
   });
 
   it('never exceeds the concurrency limit', async () => {
@@ -66,10 +62,12 @@ describe('RateLimiter', () => {
     const limiter = new RateLimiter(2, 0);
     const results: number[] = [];
     await Promise.all(
-      [1, 2, 3, 4, 5].map((n) => limiter.execute(() => {
-        results.push(n);
-        return Promise.resolve(n);
-      }))
+      [1, 2, 3, 4, 5].map((n) =>
+        limiter.execute(() => {
+          results.push(n);
+          return Promise.resolve(n);
+        })
+      )
     );
     expect(results).toHaveLength(5);
   });

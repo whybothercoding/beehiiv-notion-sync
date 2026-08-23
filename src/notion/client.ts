@@ -1,12 +1,30 @@
-import { Client, isFullPage } from '@notionhq/client';
+import { Client, isFullPage, isNotionClientError } from '@notionhq/client';
 import type {
   PageObjectResponse,
   QueryDatabaseParameters,
 } from '@notionhq/client/build/src/api-endpoints';
 import type { NotionPropertyValue } from './types';
+import { NotionApiError } from '../errors';
 
 export function createNotionClient(apiKey: string): Client {
   return new Client({ auth: apiKey });
+}
+
+async function withNotionError<T>(context: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (isNotionClientError(error)) {
+      throw new NotionApiError(
+        `Notion API request failed (${context}): ${error.message}`,
+        error.code,
+        {
+          cause: error,
+        }
+      );
+    }
+    throw error;
+  }
 }
 
 export async function queryDatabase(
@@ -14,27 +32,29 @@ export async function queryDatabase(
   databaseId: string,
   filter?: QueryDatabaseParameters['filter']
 ): Promise<PageObjectResponse[]> {
-  const pages: PageObjectResponse[] = [];
-  let cursor: string | undefined;
+  return withNotionError('query database', async () => {
+    const pages: PageObjectResponse[] = [];
+    let cursor: string | undefined;
 
-  do {
-    const response = await notion.databases.query({
-      database_id: databaseId,
-      filter,
-      start_cursor: cursor,
-      page_size: 100,
-    });
+    do {
+      const response = await notion.databases.query({
+        database_id: databaseId,
+        filter,
+        start_cursor: cursor,
+        page_size: 100,
+      });
 
-    for (const page of response.results) {
-      if (isFullPage(page)) {
-        pages.push(page);
+      for (const page of response.results) {
+        if (isFullPage(page)) {
+          pages.push(page);
+        }
       }
-    }
 
-    cursor = response.has_more ? (response.next_cursor ?? undefined) : undefined;
-  } while (cursor);
+      cursor = response.has_more ? (response.next_cursor ?? undefined) : undefined;
+    } while (cursor);
 
-  return pages;
+    return pages;
+  });
 }
 
 export async function findPageByProperty(
@@ -57,11 +77,13 @@ export async function createPage(
   databaseId: string,
   properties: Record<string, NotionPropertyValue>
 ): Promise<string> {
-  const response = await notion.pages.create({
-    parent: { database_id: databaseId },
-    properties: properties as Parameters<typeof notion.pages.create>[0]['properties'],
+  return withNotionError('create page', async () => {
+    const response = await notion.pages.create({
+      parent: { database_id: databaseId },
+      properties: properties as Parameters<typeof notion.pages.create>[0]['properties'],
+    });
+    return response.id;
   });
-  return response.id;
 }
 
 export async function updatePage(
@@ -69,9 +91,11 @@ export async function updatePage(
   pageId: string,
   properties: Record<string, NotionPropertyValue>
 ): Promise<void> {
-  await notion.pages.update({
-    page_id: pageId,
-    properties: properties as Parameters<typeof notion.pages.update>[0]['properties'],
+  await withNotionError('update page', async () => {
+    await notion.pages.update({
+      page_id: pageId,
+      properties: properties as Parameters<typeof notion.pages.update>[0]['properties'],
+    });
   });
 }
 
@@ -82,12 +106,7 @@ export async function upsertByExternalId(
   idValue: string,
   properties: Record<string, NotionPropertyValue>
 ): Promise<'created' | 'updated'> {
-  const existing = await findPageByProperty(
-    notion,
-    databaseId,
-    idProperty,
-    idValue
-  );
+  const existing = await findPageByProperty(notion, databaseId, idProperty, idValue);
 
   if (existing) {
     await updatePage(notion, existing.id, properties);

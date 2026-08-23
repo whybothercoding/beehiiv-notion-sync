@@ -1,5 +1,11 @@
 import {
-  titleProp, richTextProp, selectProp, multiSelectProp, dateProp, urlProp, numberProp,
+  titleProp,
+  richTextProp,
+  selectProp,
+  multiSelectProp,
+  dateProp,
+  urlProp,
+  numberProp,
 } from '../../src/notion/types';
 
 describe('titleProp', () => {
@@ -9,6 +15,11 @@ describe('titleProp', () => {
   it('handles empty string', () => {
     expect(titleProp('')).toEqual({ title: [{ text: { content: '' } }] });
   });
+  it('truncates content beyond the 2000-character Notion limit', () => {
+    const long = 'a'.repeat(2500);
+    const result = titleProp(long);
+    expect(result.title[0].text.content).toHaveLength(2000);
+  });
 });
 
 describe('richTextProp', () => {
@@ -17,6 +28,11 @@ describe('richTextProp', () => {
   });
   it('handles empty string', () => {
     expect(richTextProp('')).toEqual({ rich_text: [{ text: { content: '' } }] });
+  });
+  it('truncates content beyond the 2000-character Notion limit', () => {
+    const long = 'b'.repeat(2001);
+    const result = richTextProp(long);
+    expect(result.rich_text[0].text.content).toHaveLength(2000);
   });
 });
 
@@ -33,6 +49,9 @@ describe('selectProp', () => {
   it('returns null select for empty string', () => {
     expect(selectProp('')).toEqual({ select: null });
   });
+  it('replaces commas — unsupported in Notion option names', () => {
+    expect(selectProp('b2b, saas')).toEqual({ select: { name: 'b2b; saas' } });
+  });
 });
 
 describe('multiSelectProp', () => {
@@ -41,6 +60,13 @@ describe('multiSelectProp', () => {
   });
   it('returns empty array for empty input', () => {
     expect(multiSelectProp([])).toEqual({ multi_select: [] });
+  });
+  it('replaces commas in each option name', () => {
+    expect(multiSelectProp(['b2b, saas'])).toEqual({ multi_select: [{ name: 'b2b; saas' }] });
+  });
+  it('caps the array at the 100-option Notion limit', () => {
+    const names = Array.from({ length: 150 }, (_, i) => `tag-${i}`);
+    expect(multiSelectProp(names).multi_select).toHaveLength(100);
   });
 });
 
@@ -68,6 +94,10 @@ describe('urlProp', () => {
   });
   it('returns null for undefined', () => {
     expect(urlProp(undefined)).toEqual({ url: null });
+  });
+  it('truncates a URL beyond the 2000-character Notion limit', () => {
+    const long = `https://example.com/${'a'.repeat(2100)}`;
+    expect(urlProp(long).url).toHaveLength(2000);
   });
 });
 

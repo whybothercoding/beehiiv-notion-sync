@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import { ConfigError } from './errors';
 
 dotenv.config();
 
@@ -9,6 +10,9 @@ export interface Config {
   notionSubscribersDbId: string;
   notionPostsDbId: string;
   syncIntervalHours: number;
+  notionConcurrency: number;
+  notionRateLimitMs: number;
+  syncStateFilePath: string;
 }
 
 export interface SetupConfig {
@@ -20,11 +24,14 @@ export interface SetupConfig {
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value || value.trim() === '') {
-    throw new Error(
-      `Missing ${key}. See .env.example for setup instructions.`
-    );
+    throw new ConfigError(`Missing ${key}. See .env.example for setup instructions.`);
   }
   return value.trim();
+}
+
+function positiveIntEnv(key: string, fallback: number): number {
+  const raw = parseInt(process.env[key] ?? '', 10);
+  return Number.isFinite(raw) && raw > 0 ? raw : fallback;
 }
 
 export function loadSetupConfig(): SetupConfig {
@@ -36,13 +43,15 @@ export function loadSetupConfig(): SetupConfig {
 }
 
 export function loadConfig(): Config {
-  const rawInterval = parseInt(process.env['SYNC_INTERVAL_HOURS'] ?? '6', 10);
   return {
     beehiivApiKey: requireEnv('BEEHIIV_API_KEY'),
     beehiivPublicationId: requireEnv('BEEHIIV_PUBLICATION_ID'),
     notionApiKey: requireEnv('NOTION_API_KEY'),
     notionSubscribersDbId: requireEnv('NOTION_SUBSCRIBERS_DB_ID'),
     notionPostsDbId: requireEnv('NOTION_POSTS_DB_ID'),
-    syncIntervalHours: Number.isFinite(rawInterval) && rawInterval > 0 ? rawInterval : 6,
+    syncIntervalHours: positiveIntEnv('SYNC_INTERVAL_HOURS', 6),
+    notionConcurrency: positiveIntEnv('NOTION_CONCURRENCY', 3),
+    notionRateLimitMs: positiveIntEnv('NOTION_RATE_LIMIT_MS', 350),
+    syncStateFilePath: process.env['SYNC_STATE_FILE']?.trim() || '.sync-state.json',
   };
 }

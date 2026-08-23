@@ -1,0 +1,13 @@
+services:
+  beehiiv-notion-sync:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SYNC_STATE_FILE: /data/.sync-state.json
+    volumes:
+      - sync-state:/data
+
+volumes:
+  sync-state:

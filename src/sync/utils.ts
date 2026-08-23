@@ -1,4 +1,34 @@
 import axios from 'axios';
+import ora from 'ora';
+
+export interface Spinner {
+  text: string;
+  start(): Spinner;
+  succeed(text?: string): Spinner;
+  warn(text?: string): Spinner;
+}
+
+class NullSpinner implements Spinner {
+  text = '';
+  start(): Spinner {
+    return this;
+  }
+  succeed(): Spinner {
+    return this;
+  }
+  warn(): Spinner {
+    return this;
+  }
+}
+
+/**
+ * Real ora spinner by default. In quiet mode (used for --json output) it's a
+ * no-op so stdout stays clean for piping — nothing but the final JSON summary
+ * gets written.
+ */
+export function createSpinner(initialText: string, quiet = false): Spinner {
+  return quiet ? new NullSpinner() : ora(initialText).start();
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -33,6 +63,23 @@ export async function withRetry<T>(
   }
 
   throw lastError;
+}
+
+export interface SyncOptions {
+  dryRun?: boolean;
+  /** Bypass the unchanged-record skip and force-write every record. */
+  force?: boolean;
+  concurrency?: number;
+  rateLimitMs?: number;
+  /** Suppress spinner/console output — used by --json. */
+  quiet?: boolean;
+}
+
+export interface SyncResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  failed: number;
 }
 
 export class RateLimiter {

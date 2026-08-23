@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+docs/superpowers
+.env
+*.log
+.sync-state.json

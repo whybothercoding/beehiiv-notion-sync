@@ -10,12 +10,20 @@ export async function createSubscribersDatabase(
     title: [{ type: 'text', text: { content: 'Beehiiv Subscribers' } }],
     properties: {
       Email: { title: {} },
+      // Notion auto-creates any status value not pre-seeded here, so this
+      // list is a head start, not an exhaustive constraint. Real values per
+      // https://developers.beehiiv.com/api-reference/subscriptions/index:
+      // validating, invalid, pending, active, inactive, needs_attention, paused.
       Status: {
         select: {
           options: [
             { name: 'active', color: 'green' },
-            { name: 'inactive', color: 'yellow' },
-            { name: 'unsubscribed', color: 'red' },
+            { name: 'pending', color: 'yellow' },
+            { name: 'validating', color: 'yellow' },
+            { name: 'inactive', color: 'gray' },
+            { name: 'invalid', color: 'red' },
+            { name: 'needs_attention', color: 'orange' },
+            { name: 'paused', color: 'gray' },
           ],
         },
       },
@@ -32,10 +40,7 @@ export async function createSubscribersDatabase(
   return response.id;
 }
 
-export async function createPostsDatabase(
-  notion: Client,
-  parentPageId: string
-): Promise<string> {
+export async function createPostsDatabase(notion: Client, parentPageId: string): Promise<string> {
   const response = await notion.databases.create({
     parent: { type: 'page_id', page_id: parentPageId },
     title: [{ type: 'text', text: { content: 'Beehiiv Posts' } }],
@@ -51,6 +56,8 @@ export async function createPostsDatabase(
       Clicks: { number: { format: 'number' } },
       ClickRate: { number: { format: 'percent' } },
       Unsubscribes: { number: { format: 'number' } },
+      WebViews: { number: { format: 'number' } },
+      WebClicks: { number: { format: 'number' } },
       BeehiivPostId: { rich_text: {} },
     },
   });
@@ -58,10 +65,7 @@ export async function createPostsDatabase(
   return response.id;
 }
 
-export async function runSetup(
-  notionApiKey: string,
-  parentPageId: string
-): Promise<void> {
+export async function runSetup(notionApiKey: string, parentPageId: string): Promise<void> {
   const notion = new Client({ auth: notionApiKey });
 
   console.log(chalk.blue('Creating Beehiiv Subscribers database...'));

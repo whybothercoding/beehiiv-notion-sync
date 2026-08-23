@@ -16,7 +16,9 @@ describe('loadSetupConfig', () => {
     delete process.env.BEEHIIV_PUBLICATION_ID;
     delete process.env.NOTION_API_KEY;
   });
-  afterEach(() => { process.env = saved; });
+  afterEach(() => {
+    process.env = saved;
+  });
 
   it('returns all three fields when env vars are set', () => {
     process.env.BEEHIIV_API_KEY = BASE_ENV.BEEHIIV_API_KEY;
@@ -52,7 +54,9 @@ describe('loadConfig', () => {
     Object.keys(BASE_ENV).forEach((k) => delete process.env[k]);
     delete process.env.SYNC_INTERVAL_HOURS;
   });
-  afterEach(() => { process.env = saved; });
+  afterEach(() => {
+    process.env = saved;
+  });
 
   it('loads all five required fields', () => {
     Object.assign(process.env, BASE_ENV);
@@ -79,5 +83,32 @@ describe('loadConfig', () => {
     Object.assign(process.env, BASE_ENV);
     process.env.SYNC_INTERVAL_HOURS = 'foo';
     expect(loadConfig().syncIntervalHours).toBe(6);
+  });
+
+  it('defaults notionConcurrency and notionRateLimitMs when unset', () => {
+    Object.assign(process.env, BASE_ENV);
+    const config = loadConfig();
+    expect(config.notionConcurrency).toBe(3);
+    expect(config.notionRateLimitMs).toBe(350);
+  });
+
+  it('reads notionConcurrency and notionRateLimitMs from env vars', () => {
+    Object.assign(process.env, BASE_ENV);
+    process.env.NOTION_CONCURRENCY = '5';
+    process.env.NOTION_RATE_LIMIT_MS = '500';
+    const config = loadConfig();
+    expect(config.notionConcurrency).toBe(5);
+    expect(config.notionRateLimitMs).toBe(500);
+  });
+
+  it('defaults syncStateFilePath to .sync-state.json when unset', () => {
+    Object.assign(process.env, BASE_ENV);
+    expect(loadConfig().syncStateFilePath).toBe('.sync-state.json');
+  });
+
+  it('reads syncStateFilePath from SYNC_STATE_FILE', () => {
+    Object.assign(process.env, BASE_ENV);
+    process.env.SYNC_STATE_FILE = '/tmp/custom-state.json';
+    expect(loadConfig().syncStateFilePath).toBe('/tmp/custom-state.json');
   });
 });

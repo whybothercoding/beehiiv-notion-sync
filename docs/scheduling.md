@@ -6,6 +6,8 @@ The `start` command runs the sync on a recurring schedule defined by `SYNC_INTER
 beehiiv-notion-sync start
 ```
 
+`start` handles `SIGINT`/`SIGTERM` gracefully — it stops the cron schedule and waits for any in-progress sync to finish before exiting, rather than being killed mid-write. This applies whether the signal comes from `Ctrl+C`, `pm2 stop`, `kill`, or `systemctl stop`.
+
 ## Run in the Background with pm2 (Recommended)
 
 [pm2](https://pm2.keymetrics.io/) is a process manager that keeps your process running across reboots and restarts it on crash.
