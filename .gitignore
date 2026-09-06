@@ -5,3 +5,5 @@ dist/
 docs/superpowers/
 coverage/
 .sync-state.json
+CLAUDE.md
+AGENTS.md
