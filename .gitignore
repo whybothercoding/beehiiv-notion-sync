@@ -2,7 +2,6 @@ node_modules/
 dist/
 .env
 *.js.map
-docs/superpowers/
 coverage/
 .sync-state.json
 CLAUDE.md
