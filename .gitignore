@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 *.js.map
+.DS_Store
 coverage/
 .sync-state.json
 CLAUDE.md
