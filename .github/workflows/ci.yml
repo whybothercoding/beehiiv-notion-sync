@@ -19,12 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # [18,20,22] → [22,24] on 2026-09-06 (npm-dependency-policy pass,
-        # normalizing toward production's Dockerfile) silently dropped
-        # coverage of this package's own declared engines.node floor. Node
-        # 18 is EOL (engines bumped to >=20 same day as this fix, 2026-09-09)
-        # so [20, 24] is real coverage, not a stale unmaintained-runtime test.
-        node-version: [20, 24]
+        # Node 20 reached end of life on 2026-04-30, and the pinned npm 12 below
+        # requires Node ^22.22.2 || ^24.15.0 || >=26, so a Node 20 leg cannot even
+        # install. The tested floor is therefore 22; engines.node says the same.
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@v4
 
