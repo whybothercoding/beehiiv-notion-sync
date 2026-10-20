@@ -54,7 +54,7 @@ Stats are nested under `stats.email` / `stats.web` (not flat) and are only prese
 
 ## Prerequisites
 
-- Node.js ≥ 18 (or Docker)
+- Node.js ≥ 22 (or Docker)
 - A Beehiiv account with API access
 - A Notion account with an integration set up
 
@@ -232,7 +232,7 @@ npm run format:check      # check formatting without writing
 npm run typecheck          # tsc --noEmit
 ```
 
-A pre-commit hook (Husky + lint-staged) runs lint/format on staged files and a full typecheck before every commit. CI (`.github/workflows/ci.yml`) runs the same checks plus the full test suite with coverage thresholds enforced, on Node 18/20/22.
+A pre-commit hook (Husky + lint-staged) runs lint/format on staged files and a full typecheck before every commit. CI (`.github/workflows/ci.yml`) runs the same checks plus the full test suite with coverage thresholds enforced, on Node 22 and 24.
 
 ---
 
